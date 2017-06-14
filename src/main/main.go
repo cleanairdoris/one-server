@@ -21,10 +21,16 @@ type TitleSlice struct {
 }
 
 type Content struct {
-	Type   string `json:"type"`
-	Name   string `json:"name"`
-	Value  string `json:"value"`
-	Number int64  `json:"number"`
+	Category    string `json:"category"`
+	Name        string `json:"name"`
+	Results     string `json:"results"`
+	Number      int64  `json:"number"`
+	SearchCount int64  `json:"searchcount"`
+}
+
+type ContentSlice struct {
+	RtnCode  int       `json:"rtncode"`
+	Contents []Content `json:"contents"`
 }
 
 var db = &sql.DB{}
@@ -34,19 +40,6 @@ func init() {
 }
 
 func getTitle(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-
-	titleFile := "title.json"
-	buf, err := ioutil.ReadFile(titleFile)
-	if err != nil {
-		fmt.Fprintf(w, "{\"code\":101}")
-	} else {
-		fmt.Fprintf(w, "%s", buf)
-	}
-
-}
-
-func getData(w http.ResponseWriter, r *http.Request) {
 	var t TitleSlice
 
 	rows, err := db.Query("select * from title")
@@ -56,20 +49,20 @@ func getData(w http.ResponseWriter, r *http.Request) {
 	t.RtnCode = 1
 	for rows.Next() {
 		t.RtnCode = 0
-		var s string
-		var i int
-		err = rows.Scan(&i, &s)
+
+		var tmp Title
+		err = rows.Scan(&tmp.ID, &tmp.Name)
 		if err != nil {
 			t.RtnCode = 2
 		} else {
-			t.Titles = append(t.Titles, Title{ID: i, Name: s})
+			t.Titles = append(t.Titles, tmp)
 		}
 	}
 
 	rows.Close()
 	b, err := json.Marshal(t)
 	if err != nil {
-		t.RtnCode = 3
+		fmt.Fprintf(w, "{\"rtncode\":1101}")
 	} else {
 		fmt.Fprintf(w, "%s", b)
 	}
@@ -82,22 +75,68 @@ func setData(w http.ResponseWriter, r *http.Request) {
 		r.Body.Close()
 
 		var con Content
-		json.Unmarshal([]byte(result), &con)
+		fmt.Println(string(result))
+		json.Unmarshal(result, &con)
 
-		_, err := db.Exec("INSERT INTO content(type,name,value,number) values(?,?,?,?)", con.Type, con.Name, con.Value, 1)
+		_, err := db.Exec("INSERT INTO content(type,name,value,number) values(?,?,?,?)", con.Category, con.Name, con.Results, con.Number)
 
 		if err != nil {
-			fmt.Fprintf(w, "%s", "insert fail")
+			fmt.Fprintf(w, "{\"rtncode\":0}")
 		} else {
-			fmt.Fprintf(w, "%s", "insert sucess")
+			fmt.Fprintf(w, "{\"rtncode\":101}")
 		}
 
 	}
 }
 
+func queryKey(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	if r.Method == "POST" {
+		result, _ := ioutil.ReadAll(r.Body)
+		r.Body.Close()
+
+		var con Content
+		var c ContentSlice
+		c.RtnCode = 0
+		fmt.Println(string(result))
+		json.Unmarshal(result, &con)
+
+		row := db.QueryRow("SELECT * FROM content where name = ? and value = ?", con.Name, con.Results)
+
+		var tmp Content
+		var ID int
+		er := row.Scan(&ID, &tmp.Category, &tmp.Name, &tmp.Results, &tmp.Number, &tmp.SearchCount)
+		if er != nil {
+			if er == sql.ErrNoRows {
+				c.RtnCode = 1
+			} else {
+				c.RtnCode = 2
+			}
+
+		} else {
+			c.RtnCode = 0
+			c.Contents = append(c.Contents, tmp)
+		}
+
+		b, err := json.Marshal(c)
+		if err != nil {
+			fmt.Fprintf(w, "{\"rtncode\":1101}")
+		} else {
+			fmt.Fprintf(w, "%s", b)
+			updateCount(ID)
+		}
+
+	}
+}
+
+func updateCount(ID int) {
+	db.Exec("update content set searchcount = searchcount + 1 where id = ?", ID)
+}
+
 func main() {
 	http.HandleFunc("/getTitle", getTitle)
-	http.HandleFunc("/getData", getData)
+	http.HandleFunc("/setData", setData)
+	http.HandleFunc("/queryKey", queryKey)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe:", err)
