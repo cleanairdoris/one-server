@@ -130,8 +130,10 @@ func queryKey(w http.ResponseWriter, r *http.Request) {
 		er := row.Scan(&ID, &tmp.Category, &tmp.Name, &tmp.Results, &tmp.Number, &tmp.SearchCount)
 		if er != nil {
 			if er == sql.ErrNoRows {
+				//the select result is null
 				c.RtnCode = 1
 			} else {
+				//select err
 				c.RtnCode = 2
 			}
 
@@ -145,6 +147,7 @@ func queryKey(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "{\"rtncode\":1101}")
 		} else {
 			fmt.Fprintf(w, "%s", b)
+			//insert success,update the searchcount.
 			updateCount(ID)
 		}
 
