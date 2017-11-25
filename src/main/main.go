@@ -100,12 +100,12 @@ func setData(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(string(result))
 		json.Unmarshal(result, &con)
 
-		_, err := db.Exec("INSERT INTO content(type,name,value,number) values(?,?,?,?)", con.Category, con.Name, con.Results, con.Number)
+		_, err := db.Exec("INSERT INTO content(category,name,results,number,searchcount) values(?,?,?,?)", con.Category, con.Name, con.Results, con.Number, 1)
 
 		if err != nil {
-			fmt.Fprintf(w, "{\"rtncode\":0}")
-		} else {
 			fmt.Fprintf(w, "{\"rtncode\":101}")
+		} else {
+			fmt.Fprintf(w, "{\"rtncode\":0}")
 		}
 
 	}
@@ -123,7 +123,7 @@ func queryKey(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(string(result))
 		json.Unmarshal(result, &con)
 
-		row := db.QueryRow("SELECT * FROM content where name = ? and value = ?", con.Name, con.Results)
+		row := db.QueryRow("SELECT * FROM content where name = ? and results = ?", con.Name, con.Results)
 
 		var tmp Content
 		var ID int
@@ -162,7 +162,7 @@ func main() {
 	http.HandleFunc("/getTitle", getTitle)
 	http.HandleFunc("/setData", setData)
 	http.HandleFunc("/queryKey", queryKey)
-	err := http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":18080", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}
