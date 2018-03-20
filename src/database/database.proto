@@ -1,0 +1,16 @@
+syntax = "proto3";
+package database;
+
+message titile {    
+    int32 id = 1;
+    string name = 2;
+}
+
+message content {    
+    int32 id = 1;
+    string category = 2;
+    string name = 3;
+    string results = 4;
+    int32 number = 5;
+    int32 searchcount = 6;
+}

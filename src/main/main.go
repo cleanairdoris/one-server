@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -158,10 +159,17 @@ func updateCount(ID int) {
 	db.Exec("update content set searchcount = searchcount + 1 where id = ?", ID)
 }
 
+func prototest(w http.ResponseWriter, r *http.Request) {
+	data := TestPro()
+	str := base64.StdEncoding.EncodeToString(data)
+	fmt.Fprintf(w, "%s", str)
+}
+
 func main() {
 	http.HandleFunc("/getTitle", getTitle)
 	http.HandleFunc("/setData", setData)
 	http.HandleFunc("/queryKey", queryKey)
+	http.HandleFunc("/getproto", prototest)
 	err := http.ListenAndServe(":18080", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe:", err)

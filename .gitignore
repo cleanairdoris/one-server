@@ -1,6 +1,7 @@
 bin
 pkg
 .idea
+src/main.exe
 src/github.com
 src/golang.org
 src/sourcegraph.com
