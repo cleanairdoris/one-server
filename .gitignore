@@ -2,6 +2,7 @@ bin
 pkg
 .idea
 src/main.exe
+src/main/config.json
 src/github.com
 src/golang.org
 src/sourcegraph.com
