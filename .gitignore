@@ -8,3 +8,4 @@ src/golang.org
 src/sourcegraph.com
 src/main/debug
 .vscode
+config.json

@@ -26,8 +26,7 @@ func init() {
 	var config configs
 	json.Unmarshal(buf, &config)
 
-	//db, _ = sql.Open("mysql", "root:6579.?a@tcp(localhost:3306)/one?charset=utf8")
-	db, _ = sql.Open(config.DbType, config.User+":"+config.Pwd+"@tcp(localhost:3306)/"+config.DbName+"?charset=utf8")
+	db, _ = sql.Open(config.DbType, config.User+":"+config.Pwd+"@tcp(47.98.45.65:3306)/"+config.DbName+"?charset=utf8")
 }
 
 func updateCount(ID int) {
